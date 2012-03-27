@@ -64,7 +64,9 @@ int read_args(int argc, char *argv[], struct user_options *opts)
 			if ( strcmp(optarg, "csv") == 0 ) {
 				opts->output_format = CSV;
 			} else {
-				trace(0, "Unknown format type \"%s\", must be one of \"raw\", \"clean\", or \"csv\"\n", optarg );
+				trace(0, "Unknown format type \"%s\", "
+					"must be one of \"raw\", \"clean\", "
+					"or \"csv\"\n", optarg);
 				return -1;
 			}
 			break;
