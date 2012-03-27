@@ -115,20 +115,22 @@ static int _hiddev_open(const char *device_path, int *usage_code,
 {
 	struct hiddev_devinfo device_info;
 	struct hiddev_report_info rinfo;
-	int ret, error;
+	int ret;
 	int fd;
 
 	trace(3, "Opening device %s\n", device_path);
 	fd = ret = open(device_path, O_RDWR);
 
-	if (fd < 0)
-		goto err;
+	if (fd < 0) {
+		trace(0, "Error opening device %s: %m\n", device_path);
+		return -1;
+	}
 
 	rinfo.report_type = HID_REPORT_TYPE_OUTPUT;
 	rinfo.report_id = HID_REPORT_ID_FIRST;
 	ret = ioctl(fd, HIDIOCGREPORTINFO, &rinfo);
 	if (ret < 0)
-		goto err_close;
+		goto err_ioctl;
 
 	PRINT_FIELD(3, rinfo.report_type);
 	PRINT_FIELD(3, rinfo.report_id);
@@ -142,7 +144,7 @@ static int _hiddev_open(const char *device_path, int *usage_code,
 	ret = ioctl(fd, HIDIOCGDEVINFO, &device_info);
 
 	if (ret < 0)
-		goto err_close;
+		goto err_ioctl;
 
 	PRINT_FIELD(3, device_info.bustype);
 	PRINT_FIELD(3, device_info.busnum);
@@ -164,13 +166,12 @@ static int _hiddev_open(const char *device_path, int *usage_code,
 
 	return fd;
 
+err_ioctl:
+	trace(0, "Error issuing ioctl: %m\n");
+
 err_close:
 	close(fd);
-err:
-	error = errno;
-	if (error)
-		printf("Error opening device %s: %s\n", device_path,
-			strerror(error));
+
 	return ret;
 }
 
