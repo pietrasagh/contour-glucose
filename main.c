@@ -32,7 +32,18 @@
 #include "options.h"
 #include "contour-protocol.h"
 
-char *token(char **str, char sep);
+static char *token(char **str, char sep)
+{
+	char *start = *str;
+	char *cur;
+
+	for (cur = start; *cur && (*cur != sep); ++cur);
+
+	*cur = 0;
+	*str = cur+1;
+
+	return start;
+}
 
 int main(int argc, char *argv[])
 {
@@ -117,14 +128,4 @@ int main(int argc, char *argv[])
 	trace(0, "\nDone.\n");
 
 	return 0;
-}
-
-char *token(char **str, char sep)
-{
-  char *start = *str;
-  char *cur;
-  for ( cur = start; *cur && (*cur != sep); ++cur ) ;
-  *cur = 0;
-  *str = cur+1;
-  return start;
 }
