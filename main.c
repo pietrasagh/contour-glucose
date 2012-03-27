@@ -137,8 +137,11 @@ static int dump_entries(struct user_options *opts, int fd, int usage_code)
 
 int main(int argc, char *argv[])
 {
-	struct user_options opts = { .usbdev = NULL, .output_path = NULL, .output_format = CLEAN, .trace_level = 0 };
+	struct user_options opts;
 	int fd, usage_code, ret, error;
+
+	bzero(&opts, sizeof(opts));
+	opts.output_format = CLEAN;
 
 	if ( read_args(argc, argv, &opts) )
 		return -1;
