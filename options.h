@@ -20,6 +20,8 @@
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
 
+#include <stdio.h>
+
 struct user_options {
 	char *usbdev;
 	char *output_path;
@@ -29,6 +31,7 @@ struct user_options {
 		CSV = 2,
 	} output_format;
 	int trace_level;
+	FILE *outf;
 };
 
 int read_args(int argc, char *argv[], struct user_options *opts);

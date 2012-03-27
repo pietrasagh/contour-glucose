@@ -45,13 +45,100 @@ static char *token(char **str, char sep)
 	return start;
 }
 
+static void format_csv(struct user_options *opts, struct msg *msg)
+{
+	char *tok = (char *) msg->data;
+			  token(&tok, '|');  // unknown
+	char *seq	= token(&tok, '|');
+	char *type	= token(&tok, '|');
+	char *val	= token(&tok, '|');
+	char *unit	= token(&tok, '|');
+			  token(&tok, '|');// unknown
+	char *notes	= token(&tok, '|');
+			  token(&tok, '|');// unknown
+	char *time	= token(&tok, '\r');
+
+	unit[strlen(unit)-2] = 0;
+	fprintf(opts->outf,
+		"%s,\"%.4s-%.2s-%.2s %.2s:%.2s\",\"%s\",\"%s\",\"%s\","
+		"%s,%s,%s,%s,%s,%s,%s\n",
+		seq, &time[0], &time[4], &time[6], &time[8], &time[10],
+		&type[3], val, unit,
+		strchr(notes, 'B') ? "X" : "",
+		strchr(notes, 'A') ? "X" : "",
+		strchr(notes, 'S') ? "X" : "",
+		strchr(notes, 'I') ? "X" : "",
+		strchr(notes, 'D') ? "X" : "",
+		strchr(notes, 'X') ? "X" : "",
+		strchr(notes, 'C') ? "X" : ""
+		);
+}
+
+static int format_message(struct user_options *opts, struct msg *msg, int len)
+{
+	switch (opts->output_format)
+	{
+	case CSV:
+		format_csv(opts, msg);
+		break;
+
+	case CLEAN:
+		sanitize_ascii(msg->data, len);
+		fprintf(opts->outf, "%s\n", msg->data);
+		break;
+
+	case RAW:
+		fprintf(opts->outf, "%s", msg->data);
+		break;
+
+	default:
+		trace(0, "BUG: Invalid message format %d\n",
+			opts->output_format);
+		return -1;
+	}
+
+	fflush(opts->outf);
+
+	return 0;
+}
+
+static int dump_entries(struct user_options *opts, int fd, int usage_code)
+{
+	struct msg msg;
+	int ret;
+	int entries = 0;
+
+	trace(0, "Reading data ...\n");
+	if (opts->output_format == CSV)
+		fprintf(opts->outf, "#,Time,Type,Value,Unit,\"Before meal\","
+			"\"After meal\",Stress,Sick,\"Dont feel right\","
+			"Activity,\"Control test\"\n");
+
+	while (1) {
+		ret = contour_read_entry(fd, usage_code, &msg);
+		if (ret < 45)
+			return -1;
+
+		ret = format_message(opts, &msg, ret);
+		if (ret < 0)
+			return ret;
+
+		entries++;
+
+		if ((opts->outf != stdout) || !isatty(fileno(stdout))) {
+			trace(0, "\r%d entries", entries);
+			fflush(stdout);
+		}
+	}
+	trace(0, "\nDone.\n");
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
-	FILE *outf;
 	struct user_options opts = { .usbdev = NULL, .output_path = NULL, .output_format = CLEAN, .trace_level = 0 };
-	struct msg msg;
 	int fd, usage_code, ret, error;
-	int entries = 0;
 
 	if ( read_args(argc, argv, &opts) )
 		return -1;
@@ -59,15 +146,15 @@ int main(int argc, char *argv[])
 	trace_level = opts.trace_level;
 
 	if (opts.output_path) {
-		outf = fopen(opts.output_path, "w");
-		if (outf == NULL) {
+		opts.outf = fopen(opts.output_path, "w");
+		if (opts.outf == NULL) {
 			error = errno;
 			trace(0, "Failed to open output file %s: %s\n",
 				opts.output_path, strerror(error));
 			return 1;
 		}
 	} else {
-		outf = stdout;
+		opts.outf = stdout;
 	}
 
 	if (opts.usbdev == NULL)
@@ -77,55 +164,11 @@ int main(int argc, char *argv[])
 		fd = hiddev_open(opts.usbdev, &usage_code);
 	if (fd < 0)
 		return 1;
+
 	trace(0, "Initializing ...\n");
 	contour_initialize(fd, usage_code);
 
-	trace(0, "Reading data ...\n");
-	if ( opts.output_format == CSV )
-		fprintf(outf, "#,Time,Type,Value,Unit,\"Before meal\",\"After meal\",Stress,Sick,\"Dont feel right\",Activity,\"Control test\"\n");
+	ret = dump_entries(&opts, fd, usage_code);
 
-	while (1) {
-		ret = contour_read_entry(fd, usage_code, &msg);
-		if (ret < 45)
-			break;
-
-		if ( opts.output_format == CSV ) {
-			char *tok = (char *) &msg.data;
-			              token(&tok, '|');  // unknown
-			char *seq =   token(&tok, '|');
-			char *type =  token(&tok, '|');
-			char *val =   token(&tok, '|');
-			char *unit =  token(&tok, '|');
-			              token(&tok, '|');  // unknown
-			char *notes = token(&tok, '|');
-			              token(&tok, '|');  // unknown
-			char *time =  token(&tok, '\r');
-			unit[strlen(unit)-2] = 0;
-			fprintf(outf, "%s,\"%.4s-%.2s-%.2s %.2s:%.2s\",\"%s\",\"%s\",\"%s\",%s,%s,%s,%s,%s,%s,%s\n",
-				seq, &time[0], &time[4], &time[6], &time[8], &time[10], &type[3], val, unit,
-				strchr(notes, 'B') ? "X" : "", strchr(notes, 'A') ? "X" : "",
-				strchr(notes, 'S') ? "X" : "", strchr(notes, 'I') ? "X" : "",
-				strchr(notes, 'D') ? "X" : "", strchr(notes, 'X') ? "X" : "",
-				strchr(notes, 'C') ? "X" : ""
-			);
-		} else
-		if ( opts.output_format == CLEAN ) {
-			sanitize_ascii(msg.data, ret);
-			fprintf(outf, "%s\n", msg.data);
-		} else
-		if ( opts.output_format == RAW ) {
-			fprintf(outf, "%s", msg.data);
-		}
-
-		entries++;
-		fflush(outf);
-
-		if ((outf != stdout) || !isatty(fileno(stdout))) {
-			trace(0, "\r%d entries", entries);
-			fflush(stdout);
-		}
-	}
-	trace(0, "\nDone.\n");
-
-	return 0;
+	return ret ? 1 : 0;
 }
