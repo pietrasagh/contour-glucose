@@ -82,9 +82,9 @@ int hiddev_write(const unsigned char data[64], int fd , int usage_code)
 
 	return 0;
 err2:
-	printf("HIDIOCSREPORT\n");
+	trace(0, "HIDIOCSREPORT\n");
 err:
-	printf("Error in IOCTL: %m\n");
+	trace(0, "Error in IOCTL: %m\n");
 
 	return rc;
 }
@@ -101,7 +101,7 @@ static int get_usagecode(int fd)
 
 	rc = ioctl(fd, HIDIOCGUCODE, &uref);
 	if (rc < 0) {
-		printf("Error gettin usage code: %m\n");
+		trace(0, "Error gettin usage code: %m\n");
 		return rc;
 	}
 

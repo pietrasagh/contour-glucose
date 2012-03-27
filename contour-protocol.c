@@ -40,11 +40,10 @@ static int send_msg(const struct msg *msg, int fd, int usage_code)
 	}
 
 	usleep(30 * 1000);
+
 	trace(1, "Sending: ");
-	if (trace_level >= 3)
-		print_hex(msg->data + 1, datalen(msg->data) - 1);
-	if (trace_level >= 2)
-		print_ascii(msg->data + 1, datalen(msg->data) - 1);
+	print_hex(3, msg->data + 1, datalen(msg->data) - 1);
+	print_ascii(2, msg->data + 1, datalen(msg->data) - 1);
 
 	ret = hiddev_write(msg->data, fd, usage_code);
 	if (ret)
@@ -84,11 +83,10 @@ static int read_and_verify(struct msg *msg, int fd)
 
 	memcpy(msg->data, buf, sizeof(buf));
 	memset(&msg->data[sizeof(buf)], 0, sizeof(msg->data)-sizeof(buf));
+
 	trace(2, "Got data %d: ", datalen(buf));
-	if (trace_level >= 3)
-		print_hex(buf, datalen(buf));
-	if (trace_level >= 2)
-		print_ascii(buf, datalen(buf));
+	print_hex(3, buf, datalen(buf));
+	print_ascii(2, buf, datalen(buf));
 err:
 	return 0;
 }

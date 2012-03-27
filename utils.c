@@ -34,24 +34,24 @@ int datalen(const unsigned char *data)
 	return len + 1;
 }
 
-void print_hex(const unsigned char *data, int len)
+void print_hex(int level, const unsigned char *data, int len)
 {
 	int i;
 
 	for (i = 0; i < len; i++)
-		printf("0x%02x ", data[i]);
+		trace(level, "0x%02x ", data[i]);
 
-	printf("\n");
+	trace(level, "\n");
 }
 
-void print_ascii(const unsigned char *data, int len)
+void print_ascii(int level, const unsigned char *data, int len)
 {
 	int i;
 
 	for (i = 0; i < len; i++)
-		printf("%c", is_printable(data[i]) ? data[i] : '.');
+		trace(level, "%c", is_printable(data[i]) ? data[i] : '.');
 
-	printf("\n");
+	trace(level, "\n");
 }
 
 void sanitize_ascii(unsigned char *data, int len)
