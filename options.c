@@ -26,23 +26,23 @@
 
 int read_args(int argc, char *argv[], struct user_options *opts)
 {
-        int option_index = 0, c;
-        static struct option long_options[] = {
-                { .val = 'd', .name = "device", .has_arg = 1, },
-                { .val = 'v', .name = "verbose", .has_arg = 2 },
-                { .val = 'o', .name = "output", .has_arg = 1 },
-                { .val = 'f', .name = "format", .has_arg = 1, },
-        };
-        char short_options[] = "d:v:o:f:";
+	int option_index = 0, c;
+	static struct option long_options[] = {
+		{ .val = 'd', .name = "device", .has_arg = 1, },
+		{ .val = 'v', .name = "verbose", .has_arg = 2 },
+		{ .val = 'o', .name = "output", .has_arg = 1 },
+		{ .val = 'f', .name = "format", .has_arg = 1, },
+	};
+	char short_options[] = "d:v:o:f:";
 
-        while (1) {
-                c = getopt_long(argc, argv, short_options, long_options,
-                                &option_index);
+	while (1) {
+		c = getopt_long(argc, argv, short_options, long_options,
+				&option_index);
 
-                if (c == -1)
-                        break;
+		if (c == -1)
+			break;
 
-                switch (c) {
+		switch (c) {
 		case 'd':
 			opts->usbdev = optarg;
 			break;
@@ -70,18 +70,18 @@ int read_args(int argc, char *argv[], struct user_options *opts)
 				return -1;
 			}
 			break;
-                case '?':
+		case '?':
 			return -1;
-                }
-        }
+		}
+	}
 
-        while (optind < argc) {
+	while (optind < argc) {
 		/*
 		 * Some day we do something useful here with the rest
 		 * of the options.. Maybe
 		 */
 		optind++;
-        }
+	}
 
 	return 0;
 }
