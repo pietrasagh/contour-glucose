@@ -105,18 +105,19 @@ static int read_msgs(int fd)
 	return 0;
 }
 
-#define SET_FIRST_BYTE(byte)					\
-	do {							\
-		memset(&msg.data, 0, sizeof(msg.data));		\
-		msg.data[4] = (byte);				\
-		j = 5;						\
-	} while (0)
+static void set_first_msg_byte(struct msg *msg, int *idx, char byte)
+{
+	memset(msg->data, 0, sizeof(msg->data));
+	msg->data[4] = (byte);
 
-#define SET_BYTE(idx, byte)			\
-	do {					\
-		msg.data[(idx) + 4] = (byte);	\
-		j = (idx) + 1;			\
-	} while (0)
+	*idx = 5;
+}
+
+static void set_msg_byte(struct msg *msg, int *idx, int where, char byte)
+{
+	msg->data[where + 4] = byte;
+	*idx = where + 1;
+}
 
 #define SET_BYTES(byte) msg.data[j++] = (byte)
 
@@ -127,29 +128,29 @@ static int send_pattern(int fd, int uc, unsigned char byte1, unsigned char byte2
 	msg.direction = OUT;
 
 	usleep(100 * 1000);
-	SET_FIRST_BYTE(0x01);
+	set_first_msg_byte(&msg, &j, 0x01);
 	SET_BYTES(0x04);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(250 * 1000);
-	SET_BYTE(1, 0x15);
+	set_msg_byte(&msg, &j, 1, 0x15);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 0x05);
+	set_msg_byte(&msg, &j, 1, 0x05);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
-	SET_FIRST_BYTE(0x02);
+	set_first_msg_byte(&msg, &j, 0x02);
 	SET_BYTES(byte1);
 	SET_BYTES('|');
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, byte2);
+	set_msg_byte(&msg, &j, 1, byte2);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
@@ -163,16 +164,16 @@ int contour_initialize(int fd, int uc)
 	msg.direction = OUT;
 
 	read_msgs(fd);
-	SET_FIRST_BYTE(0x01);
+	set_first_msg_byte(&msg, &j, 0x01);
 	SET_BYTES(0x04);
 	send_msg_with_proggress_note(&msg, fd, uc);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 0x06);
+	set_msg_byte(&msg, &j, 1, 0x06);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
-	SET_BYTE(1, 0x15);
+	set_msg_byte(&msg, &j, 1, 0x15);
 	for (i = 0; i < 6; i++) {
 		usleep(100 * 1000);
 		send_msg_with_proggress_note(&msg, fd, uc);
@@ -184,7 +185,7 @@ int contour_initialize(int fd, int uc)
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 0x05);
+	set_msg_byte(&msg, &j, 1, 0x05);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
@@ -205,7 +206,7 @@ int contour_initialize(int fd, int uc)
 	send_pattern(fd, uc, 'W', 'K');
 
 	usleep(100 * 1000);
-	SET_FIRST_BYTE(0x08);
+	set_first_msg_byte(&msg, &j, 0x08);
 	SET_BYTES('O');
 	SET_BYTES('b');
 	SET_BYTES('p');
@@ -218,52 +219,52 @@ int contour_initialize(int fd, int uc)
 	read_msgs(fd);
 
 	usleep(410 * 1000);
-	SET_FIRST_BYTE(0x02);
+	set_first_msg_byte(&msg, &j, 0x02);
 	SET_BYTES('R');
 	SET_BYTES('|');
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 'Y');
+	set_msg_byte(&msg, &j, 1, 'Y');
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 'W');
+	set_msg_byte(&msg, &j, 1, 'W');
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 'K');
+	set_msg_byte(&msg, &j, 1, 'K');
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 'C');
+	set_msg_byte(&msg, &j, 1, 'C');
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	send_pattern(fd, uc, 'R', 'Z');
 
 	usleep(100 * 1000);
-	SET_FIRST_BYTE(0x01);
+	set_first_msg_byte(&msg, &j, 0x01);
 	SET_BYTES(0x04);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 0x15);
+	set_msg_byte(&msg, &j, 1, 0x15);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 0x05);
+	set_msg_byte(&msg, &j, 1, 0x05);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 0x04);
+	set_msg_byte(&msg, &j, 1, 0x04);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
@@ -272,7 +273,7 @@ int contour_initialize(int fd, int uc)
 	read_msgs(fd);
 
 	usleep(100 * 1000);
-	SET_BYTE(1, 0x06);
+	set_msg_byte(&msg, &j, 1, 0x06);
 	send_msg_with_proggress_note(&msg, fd, uc);
 	read_msgs(fd);
 
@@ -296,8 +297,8 @@ int contour_read_entry(int fd, int uc, struct msg *in)
 	int j;
 
 	msg.direction = OUT;
-	SET_FIRST_BYTE(0x01);
-	SET_BYTE(1, 0x06);
+	set_first_msg_byte(&msg, &j, 0x01);
+	set_msg_byte(&msg, &j, 1, 0x06);
 	send_msg(&msg, fd, uc);
 
 	read_and_verify(in, fd);
