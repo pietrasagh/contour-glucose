@@ -52,7 +52,7 @@ int hiddev_read(unsigned char *data, int bufsize, int fd)
 
 int hiddev_write(const unsigned char data[64], int fd , int usage_code)
 {
-	int rc = 0, uindex, error;
+	int rc = 0, uindex;
 
 	struct hiddev_usage_ref uref;
 	struct hiddev_report_info rinfo;
@@ -84,8 +84,7 @@ int hiddev_write(const unsigned char data[64], int fd , int usage_code)
 err2:
 	printf("HIDIOCSREPORT\n");
 err:
-	error = errno;
-	printf("Error in IOCTL: %s\n", strerror(error));
+	printf("Error in IOCTL: %m\n");
 
 	return rc;
 }
@@ -93,7 +92,7 @@ err:
 static int get_usagecode(int fd)
 {
 	struct hiddev_usage_ref uref;
-	int rc, error;
+	int rc;
 
 	uref.report_type = HID_REPORT_TYPE_OUTPUT;
 	uref.report_id = 0x0;
@@ -102,8 +101,7 @@ static int get_usagecode(int fd)
 
 	rc = ioctl(fd, HIDIOCGUCODE, &uref);
 	if (rc < 0) {
-		error = errno;
-		printf("Error gettin usage code: %s\n", strerror(error));
+		printf("Error gettin usage code: %m\n");
 		return rc;
 	}
 
@@ -190,8 +188,8 @@ int hiddev_open_by_id(int vendor_id, int product_id, int *usage_code)
 	dir = opendir(HIDDEV_PATH);
 	if (dir == NULL) {
 		error = errno;
-		trace(4, "Failed to open directory %s: %s\n", HIDDEV_PATH,
-			strerror(error));
+		trace(4, "Failed to open directory %s: %m\n", HIDDEV_PATH);
+
 		return -error;
 	}
 
@@ -215,8 +213,8 @@ int hiddev_open_by_id(int vendor_id, int product_id, int *usage_code)
 
 	if (errno) {
 		error = errno;
-		trace(0, "Error reading directory %s: %s\n", HIDDEV_PATH,
-			strerror(error));
+		trace(0, "Error reading directory %s: %m\n", HIDDEV_PATH);
+
 		return -error;
 	}
 

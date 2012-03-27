@@ -138,7 +138,7 @@ static int dump_entries(struct user_options *opts, int fd, int usage_code)
 int main(int argc, char *argv[])
 {
 	struct user_options opts;
-	int fd, usage_code, ret, error;
+	int fd, usage_code, ret;
 
 	bzero(&opts, sizeof(opts));
 	opts.output_format = CLEAN;
@@ -151,9 +151,8 @@ int main(int argc, char *argv[])
 	if (opts.output_path) {
 		opts.outf = fopen(opts.output_path, "w");
 		if (opts.outf == NULL) {
-			error = errno;
-			trace(0, "Failed to open output file %s: %s\n",
-				opts.output_path, strerror(error));
+			trace(0, "Failed to open output file \"%s\": %m\n",
+				opts.output_path);
 			return 1;
 		}
 	} else {
