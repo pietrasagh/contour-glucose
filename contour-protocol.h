@@ -34,7 +34,7 @@ enum direction {
 };
 
 int contour_initialize(int fd, int uc);
-int contour_read_entry(int fd, int uc, struct msg *in);
+int contour_read_entry(int fd, int uc, struct msg *in, int extra_delay);
 int wait_for_device(int vendor, int product, int *usage_code);
 
 

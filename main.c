@@ -107,6 +107,7 @@ static int dump_entries(struct user_options *opts, int fd, int usage_code)
 	struct msg msg;
 	int ret;
 	int entries = 0;
+	int extra_delay = 0;
 
 	trace(0, "Reading data ...\n");
 	if (opts->output_format == CSV)
@@ -115,7 +116,7 @@ static int dump_entries(struct user_options *opts, int fd, int usage_code)
 			"Activity,\"Control test\"\n");
 
 	while (1) {
-		ret = contour_read_entry(fd, usage_code, &msg);
+		ret = contour_read_entry(fd, usage_code, &msg, extra_delay);
 		if (ret < 45)
 			break;
 
@@ -124,6 +125,18 @@ static int dump_entries(struct user_options *opts, int fd, int usage_code)
 			return ret;
 
 		entries++;
+
+		/*
+		 * Add 20ms magic sleep. This is needed especially for
+		 * meters that have reached the internal limit of 2000
+		 * glucose readings. We don't want to delay any other
+		 * reads as it appears to be needed only for every
+		 * 16th read.
+		 */
+		if (!(entries % 16))
+			extra_delay = 20;
+		else
+			extra_delay = 0;
 
 		if ((opts->outf != stdout) || !isatty(fileno(stdout))) {
 			trace(0, "\r%d entries", entries);

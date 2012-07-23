@@ -289,7 +289,7 @@ int contour_initialize(int fd, int uc)
 	return 0;
 }
 
-int contour_read_entry(int fd, int uc, struct msg *in)
+int contour_read_entry(int fd, int uc, struct msg *in, int extra_delay)
 {
 	struct msg msg;
 	int j;
@@ -297,7 +297,9 @@ int contour_read_entry(int fd, int uc, struct msg *in)
 	msg.direction = OUT;
 	set_first_msg_byte(&msg, &j, 0x01);
 	set_msg_byte(&msg, &j, 1, 0x06);
+	usleep(extra_delay * 1000);
 	send_msg(&msg, fd, uc);
+
 
 	read_and_verify(in, fd);
 	return datalen(in->data);
