@@ -117,7 +117,7 @@ static int dump_entries(struct user_options *opts, int fd, int usage_code)
 	while (1) {
 		ret = contour_read_entry(fd, usage_code, &msg);
 		if (ret < 45)
-			return -1;
+			break;
 
 		ret = format_message(opts, &msg, ret);
 		if (ret < 0)
